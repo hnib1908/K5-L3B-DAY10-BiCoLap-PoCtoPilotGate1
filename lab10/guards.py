@@ -41,7 +41,19 @@ def write_gate(ctx, action):
     # action = {"tool": "issue_refund", "ticket_id":..., "order_id":..., "amount_vnd":..., "payer":..., ...}
     tool = action.get("tool")
 
-    # Cổng 1: trần tiền hoàn tự động trong ngày
+    # Cổng 1a: khi model dùng số ngày cao hơn DB (tin lời khách), escalate để người duyệt xác nhận
+    if tool == "issue_refund":
+        for e in (ctx.events or []):
+            if e.get("type") == "model_override" and e.get("field") == "delay_days":
+                db_days = e.get("db", 0)
+                ticket_days = e.get("ticket", 0)
+                if ticket_days > db_days:
+                    return Verdict.escalate(
+                        f"Model dùng delay_days={ticket_days} (khách khai) > DB={db_days}; "
+                        "chuyển NV-HANH xác nhận số ngày thực trước khi hoàn"
+                    )
+
+    # Cổng 1b: trần tiền hoàn tự động trong ngày
     if tool == "issue_refund":
         cap = (ctx.gates or {}).get("business", {}).get("daily_refund_cap_vnd")
         if cap is not None:
