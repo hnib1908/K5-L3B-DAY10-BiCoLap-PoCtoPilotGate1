@@ -34,9 +34,54 @@ from .tools import Verdict
 
 
 def pre_guard(ctx):
-    return Verdict.allow()
+    return Verdict.allow(policy_id="REFUND-v3")
 
 
 def write_gate(ctx, action):
     # action = {"tool": "issue_refund", "ticket_id":..., "order_id":..., "amount_vnd":..., "payer":..., ...}
+    tool = action.get("tool")
+
+    # Cổng 1: trần tiền hoàn tự động trong ngày
+    if tool == "issue_refund":
+        cap = (ctx.gates or {}).get("business", {}).get("daily_refund_cap_vnd")
+        if cap is not None:
+            spent = ctx.tools.auto_refund_today_vnd()
+            amount = action.get("amount_vnd", 0)
+            if spent + amount > cap:
+                return Verdict.escalate(
+                    f"Vượt trần hoàn tự động trong ngày ({spent + amount} > {cap}đ), chuyển NV-HANH duyệt"
+                )
+
+    # Cổng 2: ghi lỗi hãng phải có nguyên nhân trong tracking
+    if tool == "file_carrier_fault":
+        require_cause = (ctx.gates or {}).get("legal", {}).get("carrier_fault_requires_recorded_cause", False)
+        if require_cause:
+            order_id = action.get("order_id")
+            parcel_id = action.get("parcel_id")
+            if order_id:
+                order = ctx.tools.lookup_order(order_id)
+                parcels = (order or {}).get("parcels", [])
+                target = next(
+                    (p for p in parcels if parcel_id is None or p.get("parcel_id") == parcel_id),
+                    None,
+                )
+                delay_cause = (target or {}).get("delay_cause")
+                if delay_cause not in ("CARRIER", "FORCE_MAJEURE"):
+                    return Verdict.deny(
+                        f"Tracking ghi nguyên nhân là '{delay_cause}', không phải lỗi hãng — bỏ ghi lỗi hãng"
+                    )
+
+    # Cổng 3: không gửi trường PII ra thông báo cho hãng
+    if tool == "notify_carrier":
+        blocked = set((ctx.gates or {}).get("legal", {}).get("pii_fields_blocked_to_third_party", []))
+        payload = action.get("payload") or {}
+        leaked = [f for f in blocked if f in payload]
+        if leaked:
+            # Xoá các trường bị khoá khỏi payload thay vì chặn hẳn
+            clean_payload = {k: v for k, v in payload.items() if k not in blocked}
+            return Verdict.modify(
+                f"Đã xoá trường PII {leaked} khỏi thông báo hãng",
+                payload=clean_payload,
+            )
+
     return Verdict.allow()
