@@ -83,16 +83,16 @@ def write_gate(ctx, action):
                         f"Tracking ghi nguyên nhân là '{delay_cause}', không phải lỗi hãng — bỏ ghi lỗi hãng"
                     )
 
-    # Cổng 3: không gửi trường PII ra thông báo cho hãng
+    # Cổng 3: chỉ cho qua đúng các trường được phép trong carrier_notice_fields (allowlist)
+    # Allowlist lấy từ policies[].carrier_notice_fields (nhất quán REFUND-v2/v3/v4)
     if tool == "notify_carrier":
-        blocked = set((ctx.gates or {}).get("legal", {}).get("pii_fields_blocked_to_third_party", []))
+        allowed = {"order_id", "parcel_id", "district", "delay_days"}
         payload = action.get("payload") or {}
-        leaked = [f for f in blocked if f in payload]
-        if leaked:
-            # Xoá các trường bị khoá khỏi payload thay vì chặn hẳn
-            clean_payload = {k: v for k, v in payload.items() if k not in blocked}
+        clean_payload = {k: v for k, v in payload.items() if k in allowed}
+        if clean_payload != payload:
+            removed = [k for k in payload if k not in allowed]
             return Verdict.modify(
-                f"Đã xoá trường PII {leaked} khỏi thông báo hãng",
+                f"Chỉ giữ trường được phép {sorted(allowed)} — đã loại {removed}",
                 payload=clean_payload,
             )
 

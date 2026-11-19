@@ -1,12 +1,16 @@
 {
-  "team": "",
-  "members": [],
-  "incident": "",
-  "decision_v1": "",
-  "decision_v2": "",
+  "team": "K5-L3B-DAY10-BiCoLap-PoCtoPilotGate1",
+  "members": [
+    "PhamMinhDuc-2A202603758",
+    "NguyenBaQuangHuy-2A202603926",
+    "VuVanBinh-2A202603831"
+  ],
+  "incident": "S7",
+  "decision_v1": "Tiếp tục",
+  "decision_v2": "Tiếp tục",
   "three_lines": {
-    "environment_assumption": "",
-    "reduce_or_prevent": "",
-    "measure_in_pilot": ""
+    "environment_assumption": "Model LLM sẽ chỉ đưa vào payload notify_carrier những trường được phép theo spec — giả định này sai; model tự thêm customer_note và dữ liệu từ DB lookup để hữu ích hơn, dẫn đến PII người nhận hàng rời hệ thống mà không có sự đồng ý.",
+    "reduce_or_prevent": "Gate của đội NGĂN hẳn nhánh [1] và [2]: cổng 3 allowlist rebuild payload từ danh sách trắng {order_id, parcel_id, district, delay_days}, không phụ thuộc hành vi model. Còn hở nhánh [3]: nếu PII được nhét vào giá trị của trường được phép (ví dụ district = 'Quận 3 — liên hệ 0912345678'), cổng không phát hiện được.",
+    "measure_in_pilot": "Cần đo lại: (1) Complaint rate từ người nhận hàng (người không đặt đơn, không dùng app LogiX) — hiện không có trong mock; (2) Xác nhận từ phía hãng xem họ đã làm gì với dữ liệu nhận được trước khi fix; (3) Kiểm tra carrier_notice_fields của REFUND-v4 (hiệu lực 2026-12-01) trước khi nâng lên policy mới."
   }
 }
