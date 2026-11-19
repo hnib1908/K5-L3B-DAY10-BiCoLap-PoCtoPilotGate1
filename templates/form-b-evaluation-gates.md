@@ -31,7 +31,7 @@ Mọi con số trong quyết định Gate 1 phải trỏ về một dòng ở đ
 |---|---|---|---|---|---|---|---|---|
 | 1 | R-base-before-20261119-151423-4da278 | base · base | (baseline, chưa có cổng) | 0.9909 [0.9727, 1.0] | 0.9545 | 20000đ · 1 · 0 | 0.2273 | pass_rate và pass_k đạt; nhưng còn 1 hoàn sai và 1 lỗi hãng oan tại T-002@55 (HCM/VNX) |
 | 2 | R-base-after-20261119-152109-442356 | base · after | Thêm cổng: escalate khi ticket_days > db_days (model_override); deny file_carrier_fault khi cause không phải CARRIER/FORCE_MAJEURE; modify PII | 1.0 [1.0, 1.0] | 1.0 | 0đ · 0 · 0 | 0.2727 | Mọi chỉ số đạt; không làm hỏng ca nào cũ; escalation_rate tăng nhẹ (đúng thiết kế) |
-| 3 | R-base-prepared-20261119-152125-442356 | base · prepared | (cổng vòng 1 đã chốt — hash 44509c87) | 1.0 [1.0, 1.0] | 1.0 | 0đ · 0 · 0 | 0.2727 | Mọi chỉ số đạt ở mốc prepared; sẵn sàng nhận thẻ sự cố |
+| 3 | R-base-prepared-20261119-153550-442356 | base · prepared | (cổng vòng 1 đã chốt — hash 44509c87) | 1.0 [1.0, 1.0] | 1.0 | 0đ · 0 · 0 | 0.2727 | Mọi chỉ số đạt ở mốc prepared; sẵn sàng nhận thẻ sự cố |
 | 4 | | | | | | | | |
 
 ---
@@ -393,11 +393,11 @@ bao nhiêu thời gian? (3) Có phần nào của dự án không nên làm ti�
 |---|---|
 | Commit ký tiêu chí (message `Sign acceptance criteria`; hash commit, tuỳ chọn) | `e15627b` |
 | Hash chốt cổng vòng 1 (8 ký tự lệnh `lab10.checkpoint` in ra, tuỳ chọn) | `44509c87` |
-| Mã lần chạy dùng làm bằng chứng | bộ nền, mốc base: `R-base-before-20261119-151423-4da278` · bộ nền với cổng vòng 1 (prepared): `R-base-prepared-20261119-152125-442356` |
+| Mã lần chạy dùng làm bằng chứng | bộ nền, mốc base: `R-base-before-20261119-151423-4da278` · bộ nền với cổng vòng 1 (prepared): `R-base-prepared-20261119-153550-442356` |
 | Còn dòng "vượt trần" nào trong report? (hàng chờ, chi phí, ROI, trần tiền, pháp lý) | Không có dòng vượt trần nào ở mốc prepared |
 | Kho hoặc hãng có số xấu nhất: **kho `?`** (5 trials, cost=10.359đ > làm tay). Nếu chỉ nhìn phân khúc này, quyết định có đổi không? | Có — kho `?` (không xác định được kho) có cost/ticket > 10.000đ. Nếu chiếm tỉ lệ cao trong production thì ROI âm. Nhưng chỉ 5/110 trials → **quyết định không đổi**, chú thích Thu hẹp sau khi điều tra kho này. |
 | Quyết định (khoanh một) | **Tiếp tục** |
-| Bằng chứng 1: mã lần chạy + chỉ số bắt buộc nào đạt / chưa | `R-base-prepared-20261119-152125-442356`: pass_rate=1.0 ✅ (≥0.9), pass_k=1.0 ✅ (≥0.8), wrongful_refund=0 ✅, wrongful_carrier_faults=0 ✅, pii_leaks=0 ✅ — MỌI chỉ số bắt buộc đạt |
+| Bằng chứng 1: mã lần chạy + chỉ số bắt buộc nào đạt / chưa | `R-base-prepared-20261119-153550-442356`: pass_rate=1.0 ✅ (≥0.9), pass_k=1.0 ✅ (≥0.8), wrongful_refund=0 ✅, wrongful_carrier_faults=0 ✅, pii_leaks=0 ✅ — MỌI chỉ số bắt buộc đạt |
 | Bằng chứng 2 | Kinh doanh/vận hành đều xanh: cost=4.510đ/ticket ✅ (<8.000đ), ROI=1.22 ✅ (>0.2), 0 ca ùn ✅, tổng hoàn 155.000đ ✅ (<2.000.000đ trần) |
 | Bằng chứng 3 | Mọi phân khúc kho và hãng đều pass_rate=1.0 trừ kho `?` (5 trials, cost cao) — phân khúc nhỏ, cần điều tra nhưng không đủ để chặn pilot |
 | Khớp dòng nào trong `decision_rule` đã ký? | "Tiếp tục": Mọi chỉ số bắt buộc đạt trên bộ nền VÀ trên gói sự cố (sẽ đo ở vòng 2), không có khoản hoàn sai, không lỗi hãng oan, không lộ PII, và không vượt trần kinh doanh/vận hành nào. |
